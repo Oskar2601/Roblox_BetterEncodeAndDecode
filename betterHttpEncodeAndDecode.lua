@@ -280,7 +280,9 @@ end
 
 local json = {
    Encode = betterJSONEncode,
-   Decode = betterJSONDecode
+   Decode = betterJSONDecode,
+   Sanitize = sanitizeDataForJSONEncode,
+   Desanitize = desantizeDataFromJSONEncode
 }
 
 return json

@@ -282,7 +282,8 @@ local json = {
    Encode = betterJSONEncode,
    Decode = betterJSONDecode,
    Sanitize = sanitizeDataForJSONEncode,
-   Desanitize = desantizeDataFromJSONEncode
+   Desanitize = desantizeDataFromJSONEncode,
+   WhitelistedDataTypes = WhitelistedDataTypes
 }
 
 return json

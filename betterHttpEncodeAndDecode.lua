@@ -248,15 +248,16 @@ end
 local maxStackCalls = 600
 local stack1, stack2 = 0, 0
 local function sanitizeTableRecursive(parent)
-   stack1 += 1; if(stack1 >= json.maxStackCalls) then warn("Hit callstack limit during sanitization (probaby a huge table?)") return end
+   stack1 += 1; assert(stack1 < json.maxStackCalls, "Hit callstack limit during sanitization (probaby a huge table?)")
    for i, v in pairs(parent) do
       if(table.find(sanitizationDatatypes, typeof(v))) then parent[i] = { dataType = typeof(v), value = sanitizeDataForJSONEncode(v) } continue end
       if(type(v) == "table") then sanitizeTableRecursive(v) end
+      if(stack1 >= json.maxStackCalls) then warn("Hit callstack limit during sanitization (probaby a huge table?)") return end
    end
 end
 
 local function desanitizeTableRecursive(parent)
-   stack2 += 1; if(stack2 >= json.maxStackCalls) then warn("Hit callstack limit during desanitization (probaby a huge table?)") return end
+   stack2 += 1; assert(stack2 < json.maxStackCalls, "Hit callstack limit during desanitization (probaby a huge table?)")
    for i, v in pairs(parent) do
       if(type(v) ~= "table") then continue end
       if(v.dataType) then parent[i] = desantizeDataFromJSONEncode(v) continue end
@@ -285,7 +286,7 @@ json = {
    Sanitize = sanitizeDataForJSONEncode,
    Desanitize = desantizeDataFromJSONEncode,
    WhitelistedDataTypes = sanitizationDatatypes,
-   maxStackCalls = 600 -- default, roblox stack size: 19996
+   maxStackCalls = 4096 -- default, can be increased
 }
 
 return json

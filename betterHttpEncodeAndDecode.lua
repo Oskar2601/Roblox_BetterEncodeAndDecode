@@ -2,6 +2,7 @@ local httpService = game:GetService("HttpService")
 
 local sanitizationDatatypes = { "Vector3", "Vector3int16", "Vector2", "Vector2int16", "CFrame", "EnumItem", "BrickColor", "Color3", "string", "number", "userdata", "UDim", "UDim2", "Rect", "TweenInfo", "Random", "NumberSequenceKeypoint", "NumberSequence", "ColorSequenceKeypoint", "ColorSequence", "CatalogSearchParams" }
 local non_utf8_regex = '[\"\\\0-\31\127-\255]'
+local json = {}
 
 local function safeNumber(...)
    local nums = {...}
@@ -244,10 +245,10 @@ local function desantizeDataFromJSONEncode(data)
    return data.value
 end
 
-local maxStackCalls = 600 -- roblox stack size: 19996
+local maxStackCalls = 600
 local stack1, stack2 = 0, 0
 local function sanitizeTableRecursive(parent)
-   stack1 += 1; if(stack1 >= maxStackCalls) then warn("Hit callstack limit during sanitization (probaby a huge table?)") return end
+   stack1 += 1; if(stack1 >= json.maxStackCalls) then warn("Hit callstack limit during sanitization (probaby a huge table?)") return end
    for i, v in pairs(parent) do
       if(table.find(sanitizationDatatypes, typeof(v))) then parent[i] = { dataType = typeof(v), value = sanitizeDataForJSONEncode(v) } continue end
       if(type(v) == "table") then sanitizeTableRecursive(v) end
@@ -255,7 +256,7 @@ local function sanitizeTableRecursive(parent)
 end
 
 local function desanitizeTableRecursive(parent)
-   stack2 += 1; if(stack2 >= maxStackCalls) then warn("Hit callstack limit during desanitization (probaby a huge table?)") return end
+   stack2 += 1; if(stack2 >= json.maxStackCalls) then warn("Hit callstack limit during desanitization (probaby a huge table?)") return end
    for i, v in pairs(parent) do
       if(type(v) ~= "table") then continue end
       if(v.dataType) then parent[i] = desantizeDataFromJSONEncode(v) continue end
@@ -278,12 +279,13 @@ function betterJSONDecode(str)
    return tbl
 end
 
-local json = {
+json = {
    Encode = betterJSONEncode,
    Decode = betterJSONDecode,
    Sanitize = sanitizeDataForJSONEncode,
    Desanitize = desantizeDataFromJSONEncode,
-   WhitelistedDataTypes = sanitizationDatatypes
+   WhitelistedDataTypes = sanitizationDatatypes,
+   maxStackCalls = 600 -- default, roblox stack size: 19996
 }
 
 return json
